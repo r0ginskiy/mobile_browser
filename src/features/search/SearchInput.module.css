@@ -1,0 +1,48 @@
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #1a73e8;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.clearButton {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.clearButton:hover {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+}
