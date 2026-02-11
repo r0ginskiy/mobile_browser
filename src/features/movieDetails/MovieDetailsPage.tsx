@@ -1,67 +1,18 @@
-import React, { useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { fetchDetailsRequest, clearDetails } from './movieDetailsSlice';
-import { addFavorite, removeFavorite } from '../favorites/favoritesSlice';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IMAGE_BASE_URL } from '../../services/tmdbApi';
 import { Spinner } from '../../components/Spinner';
 import { ErrorMessage } from '../../components/ErrorMessage';
+import { useMovieDetails } from './useMovieDetails';
+import { useToggleFavorite } from '../favorites/useToggleFavorite';
+import { useEscapeBack } from '../../hooks/useEscapeBack';
 import styles from './MovieDetailsPage.module.css';
 
 export const MovieDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-
-  const { data: movie, loading, error } = useAppSelector(
-    (state) => state.movieDetails,
-  );
-  const favoriteIds = useAppSelector((state) => state.favorites.ids);
-
-  const movieId = Number(id);
-  const isFavorite = favoriteIds.includes(movieId);
-
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchDetailsRequest(movieId));
-    }
-    return () => {
-      dispatch(clearDetails());
-    };
-  }, [dispatch, id, movieId]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        navigate('/');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
-
-  const handleToggleFavorite = useCallback(() => {
-    if (!movie) return;
-
-    if (isFavorite) {
-      dispatch(removeFavorite(movie.id));
-    } else {
-      dispatch(
-        addFavorite({
-          id: movie.id,
-          title: movie.title,
-          posterPath: movie.posterPath,
-          releaseDate: movie.releaseDate,
-          voteAverage: movie.voteAverage,
-          overview: movie.overview,
-        }),
-      );
-    }
-  }, [dispatch, movie, isFavorite]);
-
-  const handleRetry = useCallback(() => {
-    dispatch(fetchDetailsRequest(movieId));
-  }, [dispatch, movieId]);
+  const { movie, loading, error, movieId, handleRetry } = useMovieDetails();
+  const { isFavorite, toggleFavorite } = useToggleFavorite(movieId, movie);
+  useEscapeBack();
 
   if (loading) return <Spinner />;
   if (error) return <ErrorMessage message={error} onRetry={handleRetry} />;
@@ -115,7 +66,7 @@ export const MovieDetailsPage: React.FC = () => {
 
           <button
             className={`${styles.favoriteButton} ${isFavorite ? styles.isFavorite : ''}`}
-            onClick={handleToggleFavorite}
+            onClick={toggleFavorite}
           >
             {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
           </button>

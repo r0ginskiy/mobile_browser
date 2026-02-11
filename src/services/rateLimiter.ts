@@ -1,4 +1,4 @@
-class RateLimiter {
+export class RateLimiter {
   private tokens: number;
   private readonly maxTokens: number;
   private readonly refillIntervalMs: number;
