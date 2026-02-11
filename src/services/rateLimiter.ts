@@ -36,9 +36,12 @@ export class RateLimiter {
 
 const limiter = new RateLimiter(5, 10_000);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFunction<T> = (...args: any[]) => Promise<T>;
+
 export async function rateLimitedCall<T>(
-  apiFn: (...args: any[]) => Promise<T>,
-  ...args: any[]
+  apiFn: AnyFunction<T>,
+  ...args: Parameters<AnyFunction<T>>
 ): Promise<T> {
   await limiter.acquire();
   return apiFn(...args);

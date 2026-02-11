@@ -6,7 +6,8 @@ export function loadFavorites(): Movie[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (error) {
+    console.warn('Failed to load favorites from localStorage:', error);
     return [];
   }
 }
@@ -14,5 +15,7 @@ export function loadFavorites(): Movie[] {
 export function saveFavorites(movies: Movie[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
-  } catch {}
+  } catch (error) {
+    console.warn('Failed to save favorites to localStorage:', error);
+  }
 }
