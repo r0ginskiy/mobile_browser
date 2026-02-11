@@ -1,46 +1,85 @@
-# Getting Started with Create React App
+# Movie Browser
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React application for browsing movies using [The Movie Database (TMDB)](https://www.themoviedb.org/) API. Supports browsing popular and now-playing movies, search with debounce, favorites with localStorage persistence, and full keyboard navigation.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Movie Browsing** — Popular and Now Playing categories with pagination
+- **Search** — Real-time search with 500ms debounce (min 2 characters)
+- **Favorites** — Add/remove movies, persisted in localStorage
+- **Movie Details** — Full info: tagline, genres, runtime, budget, revenue
+- **Category Tabs** — Switch between Popular, Airing Now, and My Favorites with data prefetch on focus
+- **Keyboard Navigation** — Arrow keys to navigate, Enter to open, Escape to go back; Tab and mouse scroll disabled for keyboard-first UX
+- **Rate Limiting** — Token bucket algorithm (5 requests per 10 seconds)
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React 19, TypeScript
+- Redux Toolkit + Redux Saga
+- React Router v7
+- Create React App
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 16+
+- TMDB API key ([get one here](https://www.themoviedb.org/settings/api))
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Create a `.env` file in the project root:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+REACT_APP_TMDB_API_KEY=your_api_key_here
+```
 
-### `npm run eject`
+### Running
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+npm start
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Open [http://localhost:3000](http://localhost:3000) in the browser.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### Testing
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+npm test
+```
 
-## Learn More
+### Production Build
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Project Structure
+
+```
+src/
+├── app/                  # Redux store, hooks, root saga
+├── components/           # Reusable UI (Layout, Pagination, Spinner, ErrorMessage, ErrorBoundary)
+├── features/
+│   ├── categoryTabs/     # Category tab navigation
+│   ├── movies/           # Movie list (slice, saga, MovieCard, MovieGrid)
+│   ├── search/           # Search (slice, saga, SearchInput)
+│   ├── movieDetails/     # Movie detail page (slice, saga)
+│   └── favorites/        # Favorites (slice, localStorage service)
+├── hooks/                # Custom hooks (keyboard navigation, escape back, etc.)
+├── pages/                # HomePage, MoviePage
+├── services/             # TMDB API client, rate limiter
+└── tests/                # Unit tests
+```
+
+## Architecture
+
+**Data flow:** Component dispatches action -> Redux Saga intercepts -> calls TMDB API via rate-limited wrapper -> dispatches success/failure -> reducer updates store -> component re-renders.
+
+**Routing:**
+- `/` — Home page (categories, search, movie grid)
+- `/movie/:id` — Movie details page
