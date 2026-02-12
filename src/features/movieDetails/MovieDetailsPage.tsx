@@ -1,18 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IMAGE_BASE_URL } from '../../services/tmdbApi';
 import { Spinner } from '../../components/Spinner';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { useMovieDetails } from './useMovieDetails';
 import { useToggleFavorite } from '../favorites/useToggleFavorite';
-import { useEscapeBack } from '../../hooks/useEscapeBack';
 import styles from './MovieDetailsPage.module.css';
+
+type FocusTarget = 'back' | 'favorite';
 
 export const MovieDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const { movie, loading, error, movieId, handleRetry } = useMovieDetails();
   const { isFavorite, toggleFavorite } = useToggleFavorite(movieId, movie);
-  useEscapeBack();
+  const [focusedButton, setFocusedButton] = useState<FocusTarget>('favorite');
+
+  const goBack = useCallback(() => navigate('/'), [navigate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedButton('back');
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedButton('favorite');
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedButton === 'back') {
+            goBack();
+          } else {
+            toggleFavorite();
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          goBack();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedButton, goBack, toggleFavorite]);
 
   if (loading) return <Spinner />;
   if (error) return <ErrorMessage message={error} onRetry={handleRetry} />;
@@ -20,7 +53,10 @@ export const MovieDetailsPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <button className={styles.backButton} onClick={() => navigate('/')}>
+      <button
+        className={`${styles.backButton} ${focusedButton === 'back' ? styles.focusedButton : ''}`}
+        onClick={goBack}
+      >
         &larr; Back
       </button>
 
@@ -65,7 +101,7 @@ export const MovieDetailsPage: React.FC = () => {
           <p className={styles.overview}>{movie.overview}</p>
 
           <button
-            className={`${styles.favoriteButton} ${isFavorite ? styles.isFavorite : ''}`}
+            className={`${styles.favoriteButton} ${isFavorite ? styles.isFavorite : ''} ${focusedButton === 'favorite' ? styles.focusedButton : ''}`}
             onClick={toggleFavorite}
           >
             {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}

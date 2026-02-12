@@ -8,6 +8,8 @@ import styles from './MovieGrid.module.css';
 interface MovieGridProps {
   movies: Movie[];
   keyboardEnabled?: boolean;
+  onLeaveUp?: () => void;
+  onLeaveDown?: () => void;
 }
 
 const COLUMNS_PER_ROW = 4;
@@ -15,6 +17,8 @@ const COLUMNS_PER_ROW = 4;
 export const MovieGrid: React.FC<MovieGridProps> = ({
   movies,
   keyboardEnabled = true,
+  onLeaveUp,
+  onLeaveDown,
 }) => {
   const navigate = useNavigate();
 
@@ -28,13 +32,12 @@ export const MovieGrid: React.FC<MovieGridProps> = ({
     [movies, navigate],
   );
 
-  const handleEscape = useCallback(() => {}, []);
-
   const { focusedIndex, containerRef } = useKeyboardNavigation({
     totalItems: movies.length,
     columnsPerRow: COLUMNS_PER_ROW,
     onSelect: handleSelect,
-    onEscape: handleEscape,
+    onLeaveUp,
+    onLeaveDown,
     enabled: keyboardEnabled,
   });
 
@@ -48,7 +51,7 @@ export const MovieGrid: React.FC<MovieGridProps> = ({
         <MovieCard
           key={movie.id}
           movie={movie}
-          isFocused={index === focusedIndex}
+          isFocused={keyboardEnabled && index === focusedIndex}
           onClick={() => navigate(`/movie/${movie.id}`)}
         />
       ))}

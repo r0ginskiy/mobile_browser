@@ -4,7 +4,9 @@ interface UseKeyboardNavigationOptions {
   totalItems: number;
   columnsPerRow: number;
   onSelect: (index: number) => void;
-  onEscape: () => void;
+  onEscape?: () => void;
+  onLeaveUp?: () => void;
+  onLeaveDown?: () => void;
   enabled?: boolean;
 }
 
@@ -13,6 +15,8 @@ export function useKeyboardNavigation({
   columnsPerRow,
   onSelect,
   onEscape,
+  onLeaveUp,
+  onLeaveDown,
   enabled = true,
 }: UseKeyboardNavigationOptions) {
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -23,12 +27,12 @@ export function useKeyboardNavigation({
   }, [totalItems]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!enabled || !containerRef.current) return;
     const focusedCard = containerRef.current.children[focusedIndex] as HTMLElement;
     if (focusedCard) {
       focusedCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
-  }, [focusedIndex]);
+  }, [focusedIndex, enabled]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -37,33 +41,51 @@ export function useKeyboardNavigation({
       switch (e.key) {
         case 'ArrowRight':
           e.preventDefault();
-          setFocusedIndex((prev) => Math.min(prev + 1, totalItems - 1));
+          if (focusedIndex === totalItems - 1) {
+            onLeaveDown?.();
+          } else {
+            setFocusedIndex((prev) => Math.min(prev + 1, totalItems - 1));
+          }
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          if (focusedIndex === 0) {
+            onLeaveUp?.();
+          } else {
+            setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          }
           break;
         case 'ArrowDown':
           e.preventDefault();
-          setFocusedIndex((prev) =>
-            Math.min(prev + columnsPerRow, totalItems - 1),
-          );
+          if (focusedIndex + columnsPerRow >= totalItems) {
+            onLeaveDown?.();
+          } else {
+            setFocusedIndex((prev) =>
+              Math.min(prev + columnsPerRow, totalItems - 1),
+            );
+          }
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setFocusedIndex((prev) => Math.max(prev - columnsPerRow, 0));
+          if (focusedIndex - columnsPerRow < 0) {
+            onLeaveUp?.();
+          } else {
+            setFocusedIndex((prev) => Math.max(prev - columnsPerRow, 0));
+          }
           break;
         case 'Enter':
           e.preventDefault();
           onSelect(focusedIndex);
           break;
         case 'Escape':
-          e.preventDefault();
-          onEscape();
+          if (onEscape) {
+            e.preventDefault();
+            onEscape();
+          }
           break;
       }
     },
-    [enabled, totalItems, columnsPerRow, onSelect, onEscape, focusedIndex],
+    [enabled, totalItems, columnsPerRow, onSelect, onEscape, onLeaveUp, onLeaveDown, focusedIndex],
   );
 
   useEffect(() => {
@@ -71,5 +93,5 @@ export function useKeyboardNavigation({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  return { focusedIndex, containerRef };
+  return { focusedIndex, setFocusedIndex, containerRef };
 }
